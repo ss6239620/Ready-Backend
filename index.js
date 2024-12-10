@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
 const connectToMongo = require('./db');
+const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
@@ -20,6 +21,13 @@ const corsOptions = {
 
 // Use CORS with the configured options
 app.use(cors(corsOptions));
+
+const dir = './uploads';
+
+if (!fs.existsSync(dir)){
+    fs.mkdirSync(dir);
+}
+
 
 connectToMongo()
 
