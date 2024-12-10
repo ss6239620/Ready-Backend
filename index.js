@@ -10,11 +10,12 @@ app.use(express.json())
 app.use(cookieParser());
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 // Configure CORS options
 const corsOptions = {
-    origin: FRONTEND_URL, // Replace with your frontend URL
+    origin: '*', // Replace with your frontend URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // Enable cookies and authentication
+    credentials: false, // Enable cookies and authentication
 };
 
 // Use CORS with the configured options
