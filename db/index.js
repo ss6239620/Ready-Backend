@@ -11,7 +11,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const connectToMongo = () => {
-    mongoose.connect("mongodb://0.0.0.0:27017/Ready").then(() => {
+    mongoose.connect(mongo_uri).then(() => {
         console.log("Database Connected Successfully");
     }).catch((err) => {
         console.log("Database Connection Failed, Error is:", err);
