@@ -9,11 +9,11 @@ const app = express();
 app.use(express.json())
 app.use(cookieParser());
 
-const FRONTEND_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.FRONTEND_URL;
+// const FRONTEND_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.FRONTEND_URL;
 
 // Configure CORS options
 const corsOptions = {
-    origin: FRONTEND_URL, // Replace with your frontend URL
+    origin: ['http://localhost:3000','https://ready-ruddy.vercel.app'], // Replace with your frontend URL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // Enable cookies and authentication
 };
