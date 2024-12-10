@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../constant');
-
+const dotenv = require('dotenv');
+dotenv.config();
 
 const signToken = (id) => {
     return jwt.sign({ id }, JWT_SECRET, {
@@ -16,7 +17,7 @@ const createSendToken = (user, statusCode, res) => {
         httpOnly: true,
         path: '/',
         // sameSite: "none",
-        secure: false,
+        secure: process.env.NODE_ENV === 'development' ? false : true,
     };
 
     user.password = undefined;
