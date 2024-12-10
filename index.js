@@ -9,7 +9,12 @@ const app = express();
 app.use(express.json())
 app.use(cookieParser());
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+const cmd = require('node-cmd');
+const crypto = require('crypto'); 
+const bodyParser = require('body-parser');
+
+// const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Configure CORS options
 const corsOptions = {
@@ -22,6 +27,31 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 connectToMongo()
+
+
+const onWebhook = (req, res) => {
+  let hmac = crypto.createHmac('sha1', process.env.SECRET);
+  let sig  = `sha1=${hmac.update(JSON.stringify(req.body)).digest('hex')}`;
+
+  if (req.headers['x-github-event'] === 'push' && sig === req.headers['x-hub-signature']) {
+    cmd.run('chmod 777 ./git.sh'); 
+    
+    cmd.get('./git.sh', (err, data) => {  
+      if (data) {
+        console.log(data);
+      }
+      if (err) {
+        console.log(err);
+      }
+    })
+
+    cmd.run('refresh');
+  }
+
+  return res.sendStatus(200);
+}
+
+app.post('/git', onWebhook);
 
 app.get('/', (req, res) => {
     res.status(200).send("Server is active")
