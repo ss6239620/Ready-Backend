@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
-// testing glitch
+// testing2 glitch
 
 app.use(express.json())
 app.use(cookieParser());
@@ -50,8 +50,6 @@ const verifySignature = (req, res, next) => {
     return next()
 }
 
-// Github webhook listener
-// GitHub webhook listener for merges
 app.post('/git', verifySignature, (req, res) => {
     const githubEvent = req.headers['x-github-event'];
   
@@ -61,7 +59,7 @@ app.post('/git', verifySignature, (req, res) => {
   
       if (action === 'closed' && isMerged) {
         console.log(`Pull request merged into branch: ${req.body.pull_request.base.ref}`);
-        cmd.get('bash handle-merge.sh', (err, data) => {
+        cmd.get('bash git.sh', (err, data) => {
           if (err) {
             console.error(err);
             return res.status(500).send('Error processing merge event');
