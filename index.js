@@ -52,30 +52,27 @@ const verifySignature = (req, res, next) => {
 
 app.post('/git', verifySignature, (req, res) => {
     const githubEvent = req.headers['x-github-event'];
-  
+
     if (githubEvent === 'pull_request') {
-      const action = req.body.action;
-      const isMerged = req.body.pull_request.merged;
-  
-      if (action === 'closed' && isMerged) {
-        console.log(`Pull request merged into branch: ${req.body.pull_request.base.ref}`);
-        cmd.get('bash git.sh', (err, data) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).send('Error processing merge event');
-          }
-          console.log(data);
-          return res.status(200).send('Merge event processed successfully');
-        });
-      } else {
-        console.log('Pull request closed without merge. No action taken.');
-        return res.status(200).send('No action required.');
-      }
+        const action = req.body.action;
+        const isMerged = req.body.pull_request.merged;
+
+        if (action === 'closed' && isMerged) {
+            console.log(`Pull request merged into branch: ${req.body.pull_request.base.ref}`);
+            cmd.get('bash git.sh', (err, data) => {
+                if (err) return console.log(err)
+                console.log(data)
+                return res.status(200).send(data)
+            })
+        } else {
+            console.log('Pull request closed without merge. No action taken.');
+            return res.status(200).send('No action required.');
+        }
     } else {
-      console.log('Unsupported event received. Ignoring.');
-      return res.status(400).send('Unsupported event type.');
+        console.log('Unsupported event received. Ignoring.');
+        return res.status(400).send('Unsupported event type.');
     }
-  });
+});
 
 //server github-to-glitch syncing End Here
 
