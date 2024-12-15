@@ -119,7 +119,24 @@ router.post('/leavetribe', joinedTribe, validate, auth, async (req, res) => {
         successResponse(res, 200, false)
         return;
     } catch (error) {
-        failedResponse(res, 400, error);
+        return failedResponse(res, 400, error);
+    }
+})
+
+router.get('/recommendedsearch', async (req, res) => {
+    try {
+        const searchQuery = req.query.q || "";
+        if (!searchQuery) {
+            return failedResponse(res, 400, "Search query cannot be empty");
+        }
+        const tribes = await Tribe.find({
+            tribeName: { $regex: searchQuery, $options: 'i' }
+        }).limit(5).select("tribeName tribeProfileImage")
+
+        return successResponse(res, 200, tribes)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
     }
 })
 

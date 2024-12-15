@@ -214,6 +214,51 @@ router.get('/comments/:postId', auth, async (req, res) => {
     }
 });
 
+router.get('/searchcomment', async (req, res) => {
+    try {
+        const query = req.query.q;
+        const comments = await Comment.find({
+            comment_text: { $regex: query, $options: 'i' }
+        }).limit(5)
+
+        const commentsWithPosts = await Promise.all(
+            comments.map(async (comment) => {
+                // check if comment i parent comment
+                if (comment.post_id) {
+                    return comment;
+                }
+
+                let current = comment
+
+                // find the current parent_id and assign it 
+                while (current && !current.post_id) {
+                    current = await Comment.findById(current.parent_comment_ids)
+                }
+
+                // assign the post_id to comment
+                if (current && current.post_id) {
+                    comment.post_id = current.post_id
+                }
+                return comment;
+            })
+        )
+
+        const populatedPosts = await Comment.populate(commentsWithPosts, {
+            path: 'post_id',
+            select: 'total_vote content_title posted_tribe_id id'
+        })
+
+        const finalPopulate = await Comment.populate(populatedPosts, {
+            path: 'post_id.posted_tribe_id',
+            select: 'tribeName tribeProfileImage id'
+        })
+        
+        return successResponse(res, 200, finalPopulate);
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+});
+
 
 module.exports = router;
 
