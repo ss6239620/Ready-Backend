@@ -237,4 +237,20 @@ router.get('/trendingtoday', auth, async (req, res) => {
     }
 })
 
+router.get('/searchpost', async (req, res) => {
+    try {
+        const query = req.query.q;
+        const posts = await Post.find({
+            content_title: { $regex: query, $options: 'i' }
+        })
+        const populatedPosts=await Post.populate(posts,{
+            path:'posted_tribe_id',
+            select:'tribeName tribeProfileImage id'
+        })
+        return successResponse(res, 200, populatedPosts);
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+});
+
 module.exports = router;

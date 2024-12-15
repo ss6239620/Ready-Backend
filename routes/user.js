@@ -123,5 +123,21 @@ router.post('/jointribe', auth, async (req, res) => {
     }
 })
 
+router.get('/usersearch', async (req, res) => {
+    try {
+        const searchQuery = req.query.q || "";
+        if (!searchQuery) {
+            return failedResponse(res, 400, "Search query cannot be empty");
+        }
+        const users = await User.find({
+            username: { $regex: searchQuery, $options: 'i' }
+        }).limit(5).select("username profile_avtar")
+
+        return successResponse(res, 200, users)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+})
 
 module.exports = router
