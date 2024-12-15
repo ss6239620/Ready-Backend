@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
-// new glitch start test5
+// new glitch start test6
 
 app.use(express.json())
 app.use(cookieParser());
@@ -36,6 +36,10 @@ connectToMongo()
 //server github-to-glitch syncing
 const cmd = require('node-cmd')
 const crypto = require('crypto')
+const path = require('path');
+
+// Absolute path to the `add.sh` script (for reliability)
+const scriptPath = path.join(__dirname, 'add.sh');
 
 const verifySignature = (req, res, next) => {
     const payload = JSON.stringify(req.body)
@@ -59,7 +63,7 @@ app.post('/git', verifySignature, (req, res) => {
 
         if (action === 'closed' && isMerged) {
             console.log(`Pull request merged into branch: ${req.body.pull_request.base.ref}`);
-            cmd.get('bash git.sh', (err, data) => {
+            cmd.get(`bash ${scriptPath}`, (err, data) => {
                 if (err) return console.log(err)
                 console.log(data)
                 return res.status(200).send(data)
