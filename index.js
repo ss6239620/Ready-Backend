@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
-// new glitch start test7
+// new glitch start test8
 
 app.use(express.json())
 app.use(cookieParser());
@@ -39,7 +39,7 @@ const crypto = require('crypto')
 const path = require('path');
 
 // Absolute path to the `add.sh` script (for reliability)
-const scriptPath = path.join(__dirname, 'add.sh');
+const scriptPath = path.join(__dirname, 'git.sh');
 
 const verifySignature = (req, res, next) => {
     const payload = JSON.stringify(req.body)
