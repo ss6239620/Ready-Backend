@@ -131,7 +131,7 @@ router.get('/recommendedsearch', async (req, res) => {
         }
         const tribes = await Tribe.find({
             tribeName: { $regex: searchQuery, $options: 'i' }
-        }).limit(5).select("tribeName tribeProfileImage")
+        }).limit(5).select("tribeName tribeProfileImage tribeDescription")
 
         return successResponse(res, 200, tribes)
 
