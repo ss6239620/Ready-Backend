@@ -243,9 +243,14 @@ router.get('/searchcomment', async (req, res) => {
             })
         )
 
-        const populatedPosts = await Comment.populate(commentsWithPosts, {
+        const populatedCommentedUser = await Comment.populate(commentsWithPosts, {
+            path: 'created_by',
+            select: 'username profile_avtar id'
+        })
+
+        const populatedPosts = await Comment.populate(populatedCommentedUser, {
             path: 'post_id',
-            select: 'total_vote content_title posted_tribe_id id'
+            select: 'total_vote content_title posted_tribe_id id created_at'
         })
 
         const finalPopulate = await Comment.populate(populatedPosts, {
