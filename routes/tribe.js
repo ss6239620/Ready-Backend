@@ -125,13 +125,17 @@ router.post('/leavetribe', joinedTribe, validate, auth, async (req, res) => {
 
 router.get('/recommendedsearch', async (req, res) => {
     try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
         const searchQuery = req.query.q || "";
         if (!searchQuery) {
             return failedResponse(res, 400, "Search query cannot be empty");
         }
         const tribes = await Tribe.find({
             tribeName: { $regex: searchQuery, $options: 'i' }
-        }).limit(5).select("tribeName tribeProfileImage tribeDescription")
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit).select("tribeName tribeProfileImage tribeDescription")
 
         return successResponse(res, 200, tribes)
 
