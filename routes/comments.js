@@ -216,10 +216,15 @@ router.get('/comments/:postId', auth, async (req, res) => {
 
 router.get('/searchcomment', async (req, res) => {
     try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
         const query = req.query.q;
+
         const comments = await Comment.find({
             comment_text: { $regex: query, $options: 'i' }
-        }).limit(5)
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
 
         const commentsWithPosts = await Promise.all(
             comments.map(async (comment) => {
@@ -257,7 +262,7 @@ router.get('/searchcomment', async (req, res) => {
             path: 'post_id.posted_tribe_id',
             select: 'tribeName tribeProfileImage id'
         })
-        
+
         return successResponse(res, 200, finalPopulate);
     } catch (error) {
         return failedResponse(res, 400, error);
