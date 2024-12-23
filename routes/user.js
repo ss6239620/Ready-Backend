@@ -125,16 +125,35 @@ router.post('/jointribe', auth, async (req, res) => {
 
 router.get('/usersearch', async (req, res) => {
     try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
         const searchQuery = req.query.q || "";
+
         if (!searchQuery) {
             return failedResponse(res, 400, "Search query cannot be empty");
         }
         const users = await User.find({
             username: { $regex: searchQuery, $options: 'i' }
-        }).limit(5).select("username profile_avtar")
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit).select("username profile_avtar")
 
         return successResponse(res, 200, users)
 
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+})
+
+router.get('/getuserinfo/:id', async (req, res) => {
+    try {
+        const user_id = req.params.id;
+
+        const user = await User.findOne({
+            _id:user_id
+        })
+        return successResponse(res, 200, user)
     } catch (error) {
         return failedResponse(res, 400, error);
     }

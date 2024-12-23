@@ -12,4 +12,6 @@ const CONTENT_TYPE = {
     Link: "LINK"
 }
 
-module.exports = { JWT_SECRET, ROLES, CONTENT_TYPE }
+const STANDARD_PAGE_LIMIT = 5
+
+module.exports = { JWT_SECRET, ROLES, CONTENT_TYPE, STANDARD_PAGE_LIMIT }

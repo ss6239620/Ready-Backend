@@ -259,4 +259,29 @@ router.get('/searchpost', async (req, res) => {
     }
 });
 
+
+router.get('/alluserpost',auth, async (req, res) => {
+    try {        
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const posts = await Post.find({
+            created_by: req.user
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({created_at:-1})
+
+        const populatedPosts = await Post.populate(posts, {
+            path: 'posted_tribe_id',
+            select: 'tribeName tribeProfileImage id'
+        });
+
+        return successResponse(res, 200, populatedPosts);
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+});
+
+
 module.exports = router;
