@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require("cookie-parser");
 const connectToMongo = require('./db');
 const fs = require('fs');
+const http = require('http')
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
@@ -88,10 +89,19 @@ app.use('/api/user', require('./routes/user'))
 app.use('/api/tribe', require('./routes/tribe'))
 app.use('/api/post', require('./routes/posts'))
 app.use('/api/comment', require('./routes/comments'))
+app.use('/api/chat', require('./routes/chat'))
+
 
 app.use('/uploads', express.static('uploads'));
 
+const { initSocket } = require('./socket')
+
+const Server = http.createServer(app)
+
+initSocket(Server)
+
+
 const PORT = process.env.PORT || 9000;
-app.listen(PORT, () => {
+Server.listen(PORT, () => {
     console.log(`Backend Started At Port ${PORT}`);
 })

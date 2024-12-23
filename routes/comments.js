@@ -12,6 +12,7 @@ const { upload, multerErrorHandler } = require('../middileware/fileUpload');
 const { successResponse, failedResponse } = require('../utils');
 const { createCommentValidation, replyCommentValidation } = require('../validation/comments');
 const { default: mongoose } = require('mongoose');
+const { STANDARD_PAGE_LIMIT } = require('../constant');
 
 router.post('/postcomment', createCommentValidation, validate, auth, async (req, res) => {
     try {
@@ -216,7 +217,7 @@ router.get('/comments/:postId', auth, async (req, res) => {
 
 router.get('/searchcomment', async (req, res) => {
     try {
-        const { page = 1, limit = 5 } = req.query;
+        const { page = 1, limit = STANDARD_PAGE_LIMIT } = req.query;
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
         const query = req.query.q;
@@ -268,6 +269,61 @@ router.get('/searchcomment', async (req, res) => {
         return failedResponse(res, 400, error);
     }
 });
+
+
+router.get('/allusercomment', auth, async (req, res) => {
+    try {
+        const { page = 1, limit = STANDARD_PAGE_LIMIT } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const comments = await Comment.find({
+            created_by: req.user
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({ created_at: -1 })
+
+        const commentsWithPosts = await Promise.all(
+            comments.map(async (comment) => {
+                // check if comment i parent comment
+                if (comment.post_id) {
+                    return comment;
+                }
+
+                let current = comment
+
+                // find the current parent_id and assign it 
+                while (current && !current.post_id) {
+                    current = await Comment.findById(current.parent_comment_ids)
+                }
+
+                // assign the post_id to comment
+                if (current && current.post_id) {
+                    comment.post_id = current.post_id
+                }
+                return comment;
+            })
+        );
+
+        const populatedComments = await Comment.populate(commentsWithPosts, [
+            { path: 'post_id', select: 'content_title posted_tribe_id' },
+            { path: 'parent_comment_ids', select: 'created_by' },
+        ]);
+
+        const finalPopulate = await Comment.populate(populatedComments, [
+            {
+                path: 'parent_comment_ids.created_by',
+                select: 'username'
+            },
+            { path: 'post_id.posted_tribe_id', select: 'tribeName tribeProfileImage' },
+        ])
+
+        return successResponse(res, 200, finalPopulate)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+})
 
 
 module.exports = router;
