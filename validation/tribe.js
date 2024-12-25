@@ -8,12 +8,6 @@ const createTribeValidation = [
     body('tribedescription')
         .notEmpty().withMessage('Tribe description is required')
         .isLength({ min: 10 }).withMessage('Tribe description must be at least 10 characters long'),
-    body('tribebannerimage')
-        .custom((value, { req }) => req.files && req.files['tribebannerimage'] ? true : false)
-        .withMessage('Tribe banner image is required'),
-    body('tribeprofileimage')
-        .custom((value, { req }) => req.files && req.files['tribeprofileimage'] ? true : false)
-        .withMessage('Tribe profile image is required'),
 ];
 
 const joinedTribe=[
