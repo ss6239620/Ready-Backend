@@ -9,7 +9,7 @@ const Tribe = require('../models/tribe');
 const auth = require('../middileware/auth');
 const { createTribeValidation, joinedTribe } = require('../validation/tribe');
 const { upload, multerErrorHandler } = require('../middileware/fileUpload');
-const { successResponse, failedResponse } = require('../utils');
+const { successResponse, failedResponse, processUploadedFile } = require('../utils');
 
 router.post('/createtribe', upload.fields([
     { name: 'tribebannerimage', maxCount: 1 },  // First file input
@@ -20,12 +20,15 @@ router.post('/createtribe', upload.fields([
         const { tribename, tribedescription, topics } = req.body;
         const tribeExist = await Tribe.findOne({ tribeName: tribename })
         if (!tribeExist) {
+            let tribeBannerImagePath = processUploadedFile(req.files['tribebannerimage'] ? req.files['tribebannerimage'][0] : null);
+            let tribeProfileImagePath = processUploadedFile(req.files['tribeprofileimage'] ? req.files['tribeprofileimage'][0] : null);
+
             const newTribe = await Tribe.create({
                 tribeName: tribename,
                 tribeDescription: tribedescription,
                 topics: topics,
-                tribeBannerImage: req.files['tribebannerimage'][0].path,
-                tribeProfileImage: req.files['tribeprofileimage'][0].path,
+                tribeBannerImage: tribeBannerImagePath,
+                tribeProfileImage: tribeProfileImagePath,
                 created_by: req.user,
                 current_moderators: [req.user]
             })
