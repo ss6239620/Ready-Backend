@@ -48,4 +48,26 @@ function failedResponse(res, statusCode, err) {
     });
 }
 
-module.exports = { signToken, createSendToken, successResponse, failedResponse }
+
+/**
+ * Utility function to process file uploads and return the correct file path.
+ * It checks if the environment is production or development and adjusts the file path accordingly.
+ * 
+ * @param {Object} file - The uploaded file object.
+ * @returns {String} - The file path (either local or Cloudinary).
+ */
+function processUploadedFile(file) {
+    if (!file) return null;
+
+    let filePath = file.path;
+
+    if (process.env.NODE_ENV === 'production') {
+        const baseUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`;
+        filePath = filePath.replace(baseUrl, '');  // Remove Cloudinary base URL for relative path
+    }
+
+    return filePath;
+}
+
+
+module.exports = { signToken, createSendToken, successResponse, failedResponse, processUploadedFile }
