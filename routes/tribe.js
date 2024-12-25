@@ -6,9 +6,6 @@ const router = require('express').Router();
 const User = require('../models/user');
 const Tribe = require('../models/tribe');
 
-const dotenv = require('dotenv');
-dotenv.config();
-
 const auth = require('../middileware/auth');
 const { createTribeValidation, joinedTribe } = require('../validation/tribe');
 const { upload, multerErrorHandler } = require('../middileware/fileUpload');
@@ -22,36 +19,13 @@ router.post('/createtribe', upload.fields([
     try {
         const { tribename, tribedescription, topics } = req.body;
         const tribeExist = await Tribe.findOne({ tribeName: tribename })
-
-        let uploadFilePath1 = null;
-        let uploadFilePath2 = null;
-
-        let relativePath1 = null;
-        let relativePath2 = null;
-
-
-        if (req.files && req.files.content) {
-            uploadFilePath1 = req.files['tribebannerimage'][0].path;
-            uploadFilePath2 = req.files['tribeprofileimage'][0].path;
-
-            // Modify the path based on the environment directly in the file upload part
-            if (process.env.NODE_ENV === 'production') {
-                const baseUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`;
-                relativePath1 = uploadFilePath1.replace(baseUrl, ''); // Remove Cloudinary base URL in production
-                relativePath2 = uploadFilePath2.replace(baseUrl, '');
-            } else {
-                relativePath1 = uploadFilePath1;
-                relativePath2 = uploadFilePath2; 
-            }
-        }
-
         if (!tribeExist) {
             const newTribe = await Tribe.create({
                 tribeName: tribename,
                 tribeDescription: tribedescription,
                 topics: topics,
-                tribeBannerImage: relativePath1,
-                tribeProfileImage:relativePath2,
+                tribeBannerImage: req.files['tribebannerimage'][0].path,
+                tribeProfileImage: req.files['tribeprofileimage'][0].path,
                 created_by: req.user,
                 current_moderators: [req.user]
             })
