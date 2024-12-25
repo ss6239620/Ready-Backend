@@ -12,6 +12,9 @@ const { successResponse, failedResponse } = require('../utils');
 const { createPostValidation, createPostCommentValidation } = require('../validation/posts');
 const user = require('../models/user');
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 router.post('/createpost', upload.fields([
     { name: "content", maxCount: 1 }
 ]), multerErrorHandler, createPostValidation, validate, auth, async (req, res) => {
@@ -19,8 +22,18 @@ router.post('/createpost', upload.fields([
         const { content_title, content_body, content_type, tribe_posted_to, content_link } = req.body;
 
         let uploadFilePath = null;
+        let relativePath = null;
+
         if (req.files && req.files.content) {
-            uploadFilePath = req.files['content'][0].path
+            uploadFilePath = req.files['content'][0].path;
+
+            // Modify the path based on the environment directly in the file upload part
+            if (process.env.NODE_ENV === 'production') {
+                const baseUrl = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`;
+                relativePath = uploadFilePath.replace(baseUrl, ''); // Remove Cloudinary base URL in production
+            } else {
+                relativePath = uploadFilePath; // Use local file path in development
+            }
         }
 
         const savePost = await Post.create({
@@ -29,7 +42,7 @@ router.post('/createpost', upload.fields([
             posted_tribe_id: tribe_posted_to,
             created_by: req.user,
             content_type: content_type,
-            content_path: uploadFilePath,
+            content_path: relativePath,
             content_link: content_link
         })
         successResponse(res, 200, savePost)
@@ -260,8 +273,8 @@ router.get('/searchpost', async (req, res) => {
 });
 
 
-router.get('/alluserpost',auth, async (req, res) => {
-    try {        
+router.get('/alluserpost', auth, async (req, res) => {
+    try {
         const { page = 1, limit = 5 } = req.query;
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
@@ -270,7 +283,7 @@ router.get('/alluserpost',auth, async (req, res) => {
             created_by: req.user
         }).skip((pageNumber - 1) * pageLimit)
             .limit(pageLimit)
-            .sort({created_at:-1})
+            .sort({ created_at: -1 })
 
         const populatedPosts = await Post.populate(posts, {
             path: 'posted_tribe_id',
