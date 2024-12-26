@@ -116,6 +116,7 @@ router.get('/comments/:postId', auth, async (req, res) => {
                             $project: {
                                 _id: 1,
                                 username: 1,
+                                profile_avtar:1
                             },
                         },
                     ],
