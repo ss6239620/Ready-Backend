@@ -39,6 +39,11 @@ app.get('/', (req, res) => {
     res.status(200).send("Server is active")
 })
 
+app.get('/wake', (req, res) => {
+    console.log('Current server is kept alive!');
+    res.send('Server is awake!');
+});
+
 app.use('/api/user', require('./routes/user'))
 app.use('/api/tribe', require('./routes/tribe'))
 app.use('/api/post', require('./routes/posts'))
