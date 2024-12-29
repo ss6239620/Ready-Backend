@@ -8,10 +8,14 @@ const commentSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    parent_comment_ids: {
+    parent_comment_id: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'comments',  // The model being referenced
+        ref: 'comments',
     },
+    child_comment_ids: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'comments'
+    }],
     post_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'posts',
