@@ -111,6 +111,19 @@ router.get('/isjoinedtribe/:id', auth, async (req, res) => {
     }
 })
 
+router.get('/isUserCreatedTribe/:id', auth, async (req, res) => {
+    try {
+        const tribeId = req.params.id;
+        const tribe = await Tribe.findOne({ _id: tribeId, created_by: req.user });
+        if (!tribe) {
+            return successResponse(res, 200, false);
+        }
+        return successResponse(res, 200, true);
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+})
+
 router.post('/leavetribe', joinedTribe, validate, auth, async (req, res) => {
     try {
         const { tribeid } = req.body

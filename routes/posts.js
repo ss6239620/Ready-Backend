@@ -184,7 +184,27 @@ router.get('/homefeed', auth, async (req, res) => {
             select: 'tribeName tribeProfileImage id' // Select the fields to return for the tribe
         });
 
-        return successResponse(res, 200, populatedPosts)
+        return successResponse(res, 200, populatedPosts);
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+})
+
+router.get('/popularpost', async (req, res) => {
+    try {
+        const { page = 1, limit = 10 } = req.query;
+
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const posts =await Post.find().sort({total_vote:-1,created_at:-1}).skip((pageNumber - 1) * pageLimit)
+        .limit(pageLimit)
+
+        const populatedPosts = await Post.populate(posts, {
+            path: 'posted_tribe_id', // The field to populate (posted_tribe_id)
+            select: 'tribeName tribeProfileImage id' // Select the fields to return for the tribe
+        });
+        return successResponse(res, 200, populatedPosts);
     } catch (error) {
         return failedResponse(res, 400, error);
     }
@@ -217,7 +237,7 @@ router.get('/recentpost', auth, async (req, res) => {
     }
 })
 
-router.get('/trendingtoday', auth, async (req, res) => {
+router.get('/trendingtoday', async (req, res) => {
     try {
         const posts = await Post.find({
             content_type: { $nin: ["VIDEO", "TEXT"] }
