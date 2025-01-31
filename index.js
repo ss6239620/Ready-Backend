@@ -49,6 +49,7 @@ app.use('/api/tribe', require('./routes/tribe'))
 app.use('/api/post', require('./routes/posts'))
 app.use('/api/comment', require('./routes/comments'))
 app.use('/api/chat', require('./routes/chat'))
+app.use('/api/mod', require('./routes/moderation'))
 
 
 app.use('/uploads', express.static('uploads'));

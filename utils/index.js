@@ -69,5 +69,15 @@ function processUploadedFile(file) {
     return filePath;
 }
 
+function getBanEndDate(durationInDays) {
+    if (durationInDays === -1) {
+        return null; // Permanent ban
+    }
 
-module.exports = { signToken, createSendToken, successResponse, failedResponse, processUploadedFile }
+    const banEndDate = new Date();
+    banEndDate.setDate(banEndDate.getDate() + durationInDays);
+    return banEndDate;
+}
+
+
+module.exports = { signToken, createSendToken, successResponse, failedResponse, processUploadedFile, getBanEndDate }

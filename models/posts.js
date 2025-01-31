@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { CONTENT_TYPE } = require('../constant');
+const { CONTENT_TYPE,POST_STATUS } = require('../constant');
 
 const postSchema = new mongoose.Schema({
     content_title: {
@@ -35,6 +35,11 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'tribes',
         required: true
+    },
+    status:{
+        type:String,
+        default:POST_STATUS.UNMODERATED,
+        enum:[POST_STATUS.REMOVED,POST_STATUS.APPROVE,POST_STATUS.EDITED,POST_STATUS.NEED_REVIEW,POST_STATUS.REPORTED,POST_STATUS.UNMODERATED]
     },
     created_by: {
         type: mongoose.Schema.Types.ObjectId,
