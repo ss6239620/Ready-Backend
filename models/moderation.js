@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { RESTRICTION_TYPE, TRIBE_MEMBER_PERMISSION, FILTER_ACTION, TRIBE_COMMENT_FILTER, TRIBE_TYPE } = require('../constant');
+const { RESTRICTION_TYPE, TRIBE_MEMBER_PERMISSION, FILTER_ACTION, TRIBE_COMMENT_FILTER, TRIBE_TYPE, SAVED_RESPONSE } = require('../constant');
 
 //util schema start
 
@@ -378,20 +378,20 @@ const tribeSettingSchema = new mongoose.Schema({
     },
 });
 
-const tribeModLogSchema=new mongoose.Schema({
-    action:{
-        type:String,
-        required:true
+const tribeModLogSchema = new mongoose.Schema({
+    action: {
+        type: String,
+        required: true
     },
-    content:{
-        type:String,
-        required:true
+    content: {
+        type: String,
+        required: true
     },
-    type:{
-        type:String,
-        required:true
+    type: {
+        type: String,
+        required: true
     },
-    created_by:{
+    created_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true
@@ -411,11 +411,46 @@ const tribeModLogSchema=new mongoose.Schema({
     },
 });
 
+const tribeSavedResponseSchema = new mongoose.Schema({
+    response_name: {
+        type: String,
+        required: true
+    },
+    response_category: {
+        type: String,
+        default: SAVED_RESPONSE.General,
+        enum: Object.values(SAVED_RESPONSE),
+        required: true
+    },
+    response_rule: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'triberules',
+    },
+    response_message: {
+        type: String,
+        required: true
+    },
+    tribe: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'tribes',
+        required: true
+    },
+    created_at: {
+        type: Date,
+        default: Date.now()
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now()
+    },
+})
+
 const TribeRules = mongoose.model('triberules', tribeRuleSchema);
 const TribeBannedUser = mongoose.model('tribebannedusers', tribeBannedUserSchema);
 const TribeMember = mongoose.model('tribemember', tribeMemberSchema);
 const TribeSafetyFilter = mongoose.model('tribesafetyfilter', tribeSafetyFilterSchema);
 const TribeSetting = mongoose.model('tribesettings', tribeSettingSchema);
 const TribeModLogs = mongoose.model('tribemodlogs', tribeModLogSchema);
+const TribeSavedResponse = mongoose.model('tribesavedresponse', tribeSavedResponseSchema);
 
-module.exports = { TribeRules, TribeBannedUser, TribeMember, TribeSafetyFilter, TribeSetting,TribeModLogs }
+module.exports = { TribeRules, TribeBannedUser, TribeMember, TribeSafetyFilter, TribeSetting, TribeModLogs, TribeSavedResponse }

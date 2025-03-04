@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const Tribe = require('../models/tribe');
-const { TribeRules, TribeBannedUser, TribeMember } = require('../models/moderation');
+const { TribeRules, TribeBannedUser, TribeMember, TribeModLogs, TribeSetting, TribeSafetyFilter, TribeSavedResponse } = require('../models/moderation');
 const Post = require('../models/posts');
 const { successResponse, failedResponse, processUploadedFile, getBanEndDate } = require('../utils');
 const { POST_STATUS, RESTRICTION_TYPE } = require('../constant');
@@ -51,7 +51,7 @@ const updatetriberules = async (req, res) => {
 
 const deletetriberule = async (req, res) => {
     try {
-        const { rule_id } = req.body;
+        const { rule_id } = req.query;
         const rule = await TribeRules.deleteOne({ _id: rule_id })
         if (rule.deletedCount === 0) {
             return failedResponse(res, 400, 'Tribe rule not able to removed.');
@@ -80,15 +80,15 @@ const getalltriberules = async (req, res) => {
     }
 }
 
-const getallunmoderatedcontent = async (req, res) => {
+const getqueuecontent = async (req, res) => {
     try {
-        const { page = 1, limit = 5 } = req.query;
+        const { page = 1, limit = 5, post_status } = req.query;
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
 
         const allunmoderatedposts = await Post.find({
             posted_tribe_id: req.tribe_id,
-            status: POST_STATUS.UNMODERATED
+            status: post_status
         })
             .skip((pageNumber - 1) * pageLimit)
             .limit(pageLimit)
@@ -195,7 +195,7 @@ const updateuserban = async (req, res) => {
 
 const removeduserban = async (req, res) => {
     try {
-        const { ban_id } = req.body;
+        const { ban_id } = req.query;
         const member = await TribeBannedUser.deleteOne({ _id: ban_id });
         if (member.deletedCount === 0) {
             return failedResponse(res, 400, 'Not able to remove user ban');
@@ -282,7 +282,7 @@ const updateinvite = async (req, res) => {
 
 const deleteinvite = async (req, res) => {
     try {
-        const { member_id } = req.body;
+        const { member_id } = req.query;
         const member = await TribeMember.deleteOne({ _id: member_id }, { new: true });
         if (member.deletedCount === 0) {
             return failedResponse(res, 400, 'Not able to remove user.');
@@ -314,4 +314,141 @@ const getalltribemember = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getallunmoderatedcontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite,getalltribemember }
+const createmodlog = async (req, res) => {
+    try {
+        const { action, content, type } = req.body;
+        const log = await TribeModLogs.create({
+            action, content, type, tribe: req.tribe_id, created_by: req.user
+        })
+        if (!log) {
+            return failedResponse(res, 400, 'Log cannot be created');
+        }
+        return successResponse(res, 200, 'Log created')
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const gettribemodlogs = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const users = await TribeModLogs.find({
+            tribe: req.tribe_id
+        })
+            .skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({ created_at: -1 })
+            .populate('created_by', 'username profile_avtar');
+
+        return successResponse(res, 200, users)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const updatetribesettings = async (req, res) => {
+    try {
+        const updateData = req.body;
+        const updateSettings = await TribeSetting.findOneAndUpdate(
+            { tribe: req.tribe_id },
+            { $set: updateData },
+            {
+                new: true,
+                upsert: true,
+                runValidators: true
+            }
+        );
+
+        if (!updateSettings) {
+            return failedResponse(res, 400, "Not able to update tribe settings");
+        }
+        return successResponse(res, 200, 'Tribe settings updated')
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const updatetribesafetyfilters = async (req, res) => {
+    try {
+        const updateData = req.body;
+        const updateSafatey = await TribeSafetyFilter.findOneAndUpdate(
+            { tribe: req.tribe_id },
+            { $set: updateData },
+            {
+                new: true,
+                upsert: true,
+                runValidators: true
+            }
+        );
+        if (!updateSafatey) {
+            return failedResponse(res, 400, "Not able to update tribe safety filter");
+        }
+        return successResponse(res, 200, 'Tribe safety filter updated')
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const createsavedresponse = async (req, res) => {
+    try {
+        const { name, message, category, rule } = req.body;
+        const response = await TribeSavedResponse.create({
+            response_category: category,
+            response_message: message,
+            response_name: name,
+            response_rule: rule,
+            tribe: req.tribe_id
+        })
+        if (!response) {
+            return failedResponse(res, 400, "Not able to save reponse.");
+        }
+        return successResponse(res, 200, 'Saved tribe saved response.')
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const updatesavedresponse = async (req, res) => {
+    try {
+        const { name, rule, category, message, response_id } = req.body;
+        // Perform the update
+        const updatedResponse = await TribeSavedResponse.findOneAndUpdate(
+            { _id: response_id },
+            {
+                response_name: name,
+                response_category: category,
+                response_message: message,
+                response_rule: rule
+            },
+            { new: true, runValidators: true } // Return the updated document and run schema validators
+        );
+
+        if (!updatedResponse) {
+            return failedResponse(res, 404, 'Saved response not found.');
+        }
+
+        successResponse(res, 200, 'Updated saved response.');
+    } catch (error) {
+        console.error('Error updating saved response:', error);
+        return failedResponse(res, 500, 'Internal server error.');
+    }
+};
+
+const deletesavedresponse = async (req, res) => {
+    try {
+        const { response_id } = req.query;
+        const res_delete=await TribeSavedResponse.findByIdAndDelete(response_id);
+        if(!res_delete){
+            return failedResponse(res, 404, 'Saved response not deleted.');
+        }
+        successResponse(res, 200, 'Deleted saved response.');
+    } catch (error) {
+        return failedResponse(res, 500, 'Internal server error.');
+    }
+}
+
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse }
