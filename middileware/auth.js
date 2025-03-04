@@ -26,7 +26,12 @@ const auth = async (req, res, next) => {
 //this must be used only with auth middleware and placed after auth
 const mod = async (req, res, next) => {
     try {
-        const id = req.method === 'GET' ? req.query.id : req.body.id;
+        let id;
+        if (req.method === 'GET' || req.method === 'DELETE') {
+            id = req.query.id; // For GET requests, extract ID from query params
+        } else {
+            id = req.body.id; // For POST, PUT, PATCH, etc., extract ID from the body
+        }
         if (!id) {
             return res.status(401).send({ error: 'Please provide tribe id.' });
         }

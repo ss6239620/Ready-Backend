@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 
 const createRulesValidation = [
     body('rule_title').isLength({ max: 100 }).withMessage('Please provide proper rule title'),
@@ -10,11 +10,6 @@ const updateRulesValidation = [
     body('rule_title').isLength({ max: 100 }).withMessage('Please provide proper rule title'),
     body('rule_desc').isLength({ max: 500 }).withMessage('Please provide proper rule description'),
     body('rule_reason').isLength({ max: 100 }).withMessage('Please provide proper rule reason')
-];
-
-const deleteRulesValidation = [
-    body('rule_id').isLength({ max: 100 }).withMessage('Please provide proper rule id'),
-    body('tribe_id').isLength({ max: 500 }).withMessage('Please provide proper tribe id'),
 ];
 
 const changeStatusValidation = [
@@ -37,22 +32,33 @@ const userBannedValidation = [
     body('msg_to_user').notEmpty().withMessage('Please provide valid message to user.'),
 ];
 
-const deleteUserBannedValidation=[
-    body('ban_id').notEmpty().withMessage('Please provide valid Ban id.'),
-]
-
-const inviteUserValidation=[
+const inviteUserValidation = [
     body('user_id').notEmpty().withMessage('Please provide valid member id.'),
     body('permissions').notEmpty().withMessage('Please provide valid permission.'),
 ]
 
-const updateInviteValidation=[
+const updateInviteValidation = [
     body('member_id').notEmpty().withMessage('Please provide valid member id.'),
     body('permissions').notEmpty().withMessage('Please provide valid permission.'),
 ]
 
-const deleteInviteValidation=[
-    body('member_id').notEmpty().withMessage('Please provide valid member id.'),
+const createModLogValidation = [
+    body('action').notEmpty().withMessage('Please provide valid action for mod log.'),
+    body('content').notEmpty().withMessage('Please provide valid content for mod log.'),
+    body('type').notEmpty().withMessage('Please provide valid type for mod log.'),
 ]
 
-module.exports = { createRulesValidation, updateRulesValidation, deleteRulesValidation, changeStatusValidation, bannedUserValidation,userBannedValidation,inviteUserValidation,updateInviteValidation,deleteInviteValidation,deleteUserBannedValidation }
+const createSvaedResponseValidation = [
+    body('name').notEmpty().withMessage('Please provide valid response name.'),
+    body('category').notEmpty().withMessage('Please provide valid response category.'),
+    body('message').notEmpty().withMessage('Please provide valid response message.'),
+]
+
+const updateSvaedResponseValidation = [
+    body('name').notEmpty().withMessage('Please provide valid response name.'),
+    body('category').notEmpty().withMessage('Please provide valid response category.'),
+    body('message').notEmpty().withMessage('Please provide valid response message.'),
+    body('response_id').notEmpty().withMessage('Please provide valid response id.'),
+]
+
+module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation }
