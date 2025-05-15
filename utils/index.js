@@ -16,8 +16,8 @@ const createSendToken = (user, statusCode, res) => {
         maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
         httpOnly: true,
         path: '/',
-        sameSite: process.env.NODE_ENV === 'development' ? "" : "None",
-        secure: process.env.NODE_ENV === 'development' ? false : true,
+        sameSite: "None",
+        secure: process.env.NODE_ENV === 'production',
     };
 
     user.password = undefined;
