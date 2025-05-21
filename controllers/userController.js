@@ -1,5 +1,6 @@
 const { createSendToken, successResponse, failedResponse } = require("../utils");
 const User = require('../models/user');
+const Posts = require('../models/posts');
 const bcrypt = require('bcryptjs');
 const { oauth2Client } = require("../middileware/oauth");
 const axios = require('axios');
@@ -151,4 +152,5 @@ const getuserinfo = async (req, res) => {
     }
 }
 
-module.exports = { login, logout, signup, oauthRegister, jointribe, userSerach,getuserinfo }
+
+module.exports = { login, logout, signup, oauthRegister, jointribe, userSerach, getuserinfo }

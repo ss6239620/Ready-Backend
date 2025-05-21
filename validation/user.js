@@ -13,4 +13,4 @@ const loginValidation = [
     body('password').notEmpty().withMessage('Password cannot be empty')
 ];
 
-module.exports={signupValidation,loginValidation}
+module.exports = { signupValidation, loginValidation }

@@ -16,5 +16,10 @@ const createPostCommentValidation = [
 
 ];
 
+const savedPostValidation = [
+    body('post_id')
+        .notEmpty().withMessage('Post id is required'),
+];
 
-module.exports = { createPostValidation,createPostCommentValidation }
+
+module.exports = { createPostValidation, createPostCommentValidation, savedPostValidation }

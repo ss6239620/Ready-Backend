@@ -3,6 +3,7 @@ const Tribe = require('../models/tribe');
 const Post = require('../models/posts');
 
 const { successResponse, failedResponse, processUploadedFile } = require('../utils');
+const { default: mongoose } = require('mongoose');
 
 
 const createpost = async (req, res) => {
@@ -46,11 +47,18 @@ const getpost = async (req, res) => {
     try {
         const postId = req.params.id;
         const post = await Post.findOne({ _id: postId })
+
         if (!post) {
             failedResponse(res, 400, 'Post Dosent Exist');
             return;
         }
-        successResponse(res, 200, post)
+        const postObj = post.toObject();
+        postObj.isSaved = postObj.post_saved_by.some(id => id.equals(req.user));
+        postObj.isHide = postObj.post_hidden_by.some(id => id.equals(req.user));
+        postObj.isUpVoted = postObj.up_vote_users.some(id => id.equals(req.user));
+        postObj.isDownVoted = postObj.down_vote_users.some(id => id.equals(req.user));
+
+        successResponse(res, 200, postObj)
         return;
     } catch (error) {
         failedResponse(res, 400, error);
@@ -168,10 +176,21 @@ const homefeed = async (req, res) => {
         // Populate the tribe information for each post (fill the posted_tribe_id with the tribe data)
         const populatedPosts = await Post.populate(posts, {
             path: 'posted_tribe_id', // The field to populate (posted_tribe_id)
-            select: 'tribeName tribeProfileImage id' // Select the fields to return for the tribe
+            select: 'tribeName tribeProfileImage id post_saved_by' // Select the fields to return for the tribe
         });
 
-        return successResponse(res, 200, populatedPosts);
+        const userId = new mongoose.Types.ObjectId(req.user);
+
+        const populatedPostsWithFlags = populatedPosts.map(post => {
+            const postObj = post.toObject();
+            postObj.isSaved = postObj.post_saved_by.some(id => id.equals(userId));
+            postObj.isHide = postObj.post_hidden_by.some(id => id.equals(userId));
+            postObj.isUpVoted = postObj.up_vote_users.some(id => id.equals(userId));
+            postObj.isDownVoted = postObj.down_vote_users.some(id => id.equals(userId));
+            return postObj;
+        });
+
+        return successResponse(res, 200, populatedPostsWithFlags);
     } catch (error) {
         return failedResponse(res, 400, error);
     }
@@ -191,6 +210,7 @@ const popularpost = async (req, res) => {
             path: 'posted_tribe_id', // The field to populate (posted_tribe_id)
             select: 'tribeName tribeProfileImage id' // Select the fields to return for the tribe
         });
+
         return successResponse(res, 200, populatedPosts);
     } catch (error) {
         return failedResponse(res, 400, error);
@@ -289,4 +309,38 @@ const alluserpost = async (req, res) => {
     }
 }
 
-module.exports = { createpost, gettribePost, getpost, postvote, homefeed, popularpost, recentpost, trendingtoday, searchpost,alluserpost }
+const savepost = async (req, res) => {
+    try {
+        const { post_id } = req.body;
+
+        const post = await Post.findOne({ _id: post_id });
+        const isSaved = post.post_saved_by.includes(req.user);
+
+        await Post.updateOne(
+            { _id: post_id },
+            isSaved ? { $pull: { post_saved_by: req.user } } : { $addToSet: { post_saved_by: req.user } }
+        )
+        successResponse(res, 200, `Post ${isSaved ? "removed" : "saved"} successfully.`)
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const hidepost = async (req, res) => {
+    try {
+        const { post_id } = req.body;
+
+        const post = await Post.findOne({ _id: post_id });
+        const isHidden = post.post_hidden_by.includes(req.user);
+
+        await Post.updateOne(
+            { _id: post_id },
+            isHidden ? { $pull: { post_hidden_by: req.user } } : { $addToSet: { post_hidden_by: req.user } }
+        )
+        successResponse(res, 200, `Post ${isHidden ? "revealed" : "hidden"} successfully.`)
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+module.exports = { createpost, gettribePost, getpost, postvote, homefeed, popularpost, recentpost, trendingtoday, searchpost, alluserpost, savepost, hidepost }
