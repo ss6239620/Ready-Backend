@@ -8,10 +8,10 @@ const Post = require('../models/posts');
 const {auth} = require('../middileware/auth');
 const { upload, multerErrorHandler } = require('../middileware/fileUpload');
 const { successResponse, failedResponse, processUploadedFile } = require('../utils');
-const { createPostValidation, createPostCommentValidation } = require('../validation/posts');
+const { createPostValidation, createPostCommentValidation, savedPostValidation } = require('../validation/posts');
 
 const dotenv = require('dotenv');
-const { createpost, gettribePost, getpost, postvote, homefeed, popularpost, recentpost, trendingtoday, searchpost, alluserpost } = require('../controllers/postController');
+const { createpost, gettribePost, getpost, postvote, homefeed, popularpost, recentpost, trendingtoday, searchpost, alluserpost, savepost, hidepost } = require('../controllers/postController');
 dotenv.config();
 
 router.post('/createpost', upload.fields([
@@ -36,5 +36,8 @@ router.get('/searchpost', searchpost);
 
 router.get('/alluserpost', auth, alluserpost);
 
+router.post('/savepost', savedPostValidation, validate, auth, savepost);
+
+router.post('/hidepost', savedPostValidation, validate, auth, hidepost);
 
 module.exports = router;

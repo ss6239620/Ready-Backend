@@ -13,7 +13,8 @@ const postcomment = async (req, res) => {
             comment_text: comment_text,
             post_id: post_id,
             created_by: req.user
-        })
+        });
+        await Post.updateOne({ _id: post_id }, { $inc: { total_comments: 1 } });
         if (!comment) {
             failedResponse(res, 400, 'Not able to create a comment');
             return;
@@ -27,7 +28,7 @@ const postcomment = async (req, res) => {
 
 const replytocomment = async (req, res) => {
     try {
-        const { comment_text, comment_id } = req.body;
+        const { comment_text, comment_id, post_id } = req.body;
         const commentExist = await Comment.findOne({ _id: comment_id });
         if (!commentExist) {
             failedResponse(res, 400, 'Comment does not exist');
@@ -36,9 +37,11 @@ const replytocomment = async (req, res) => {
         const saveComment = await Comment.create({
             comment_text: comment_text,
             created_by: req.user,
+            post_id: post_id,
             parent_comment_id: comment_id
         })
 
+        await Post.updateOne({ _id: post_id }, { $inc: { total_comments: 1 } });
         await Comment.updateOne({ _id: comment_id }, { $addToSet: { child_comment_ids: saveComment._id } })
 
         successResponse(res, 200, saveComment)
@@ -182,7 +185,7 @@ const allusercomment = async (req, res) => {
     }
 }
 
-module.exports = { postcomment, replytocomment, getcomment, searchcomment,allusercomment }
+module.exports = { postcomment, replytocomment, getcomment, searchcomment, allusercomment }
 
 
 //utils function
