@@ -41,6 +41,8 @@ function successResponse(res, statusCode, data) {
     });
 }
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 function failedResponse(res, statusCode, err) {
     console.log(err);
     res.status(statusCode).json({
@@ -80,4 +82,4 @@ function getBanEndDate(durationInDays) {
 }
 
 
-module.exports = { signToken, createSendToken, successResponse, failedResponse, processUploadedFile, getBanEndDate }
+module.exports = { signToken, createSendToken, successResponse, failedResponse, processUploadedFile, getBanEndDate ,sleep}

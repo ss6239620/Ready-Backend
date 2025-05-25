@@ -2,7 +2,7 @@ const User = require('../models/user');
 const Tribe = require('../models/tribe');
 const { TribeRules, TribeBannedUser, TribeMember, TribeModLogs, TribeSetting, TribeSafetyFilter, TribeSavedResponse } = require('../models/moderation');
 const Post = require('../models/posts');
-const { successResponse, failedResponse, processUploadedFile, getBanEndDate } = require('../utils');
+const { successResponse, failedResponse, processUploadedFile, getBanEndDate, sleep } = require('../utils');
 const { POST_STATUS, RESTRICTION_TYPE } = require('../constant');
 
 const createtriberules = async (req, res) => {
@@ -134,29 +134,44 @@ const getstatusbasedcontent = async (req, res) => {
 const banuser = async (req, res) => {
     try {
         const { ban_reason, ban_user_id, mod_note, msg_to_user, restriction_type } = req.body;
+
+        const ban_duration = getBanEndDate(req.body.ban_duration);
+
         const alreadyBanned = await TribeBannedUser.findOne({
+            tribe: req.tribe_id,
             user: ban_user_id,
             $or: [
                 { ban_duration: null },  // User is permanently banned
                 { ban_duration: { $gt: new Date() } } // Existing ban is longer
             ]
         });
+
         if (alreadyBanned) {
-            return failedResponse(res, 400, 'User is already banned.');
-        }
-        const ban_duration = getBanEndDate(req.body.ban_duration);
-        const banned_user = await TribeBannedUser.create({
-            ban_reason: ban_reason,
-            ban_duration: ban_duration,
-            tribe: req.tribe_id,
-            banned_by: req.user,
-            user: ban_user_id,
-            mod_note,
-            msg_to_user,
-            restriction_type: restriction_type || RESTRICTION_TYPE.Banned
-        })
-        if (!banned_user) {
-            return failedResponse(res, 400, 'User connot be able to banned');
+            const updateBan = await TribeBannedUser.updateOne({ _id: alreadyBanned._id }, {
+                ban_reason: ban_reason,
+                ban_duration: ban_duration,
+                banned_by: req.user,
+                mod_note,
+                msg_to_user,
+                restriction_type: restriction_type || RESTRICTION_TYPE.Banned
+            })
+            if (!updateBan) {
+                return failedResponse(res, 400, 'User connot be able to banned');
+            }
+        } else {
+            const banned_user = await TribeBannedUser.create({
+                ban_reason: ban_reason,
+                ban_duration: ban_duration,
+                tribe: req.tribe_id,
+                banned_by: req.user,
+                user: ban_user_id,
+                mod_note,
+                msg_to_user,
+                restriction_type: restriction_type || RESTRICTION_TYPE.Banned
+            })
+            if (!banned_user) {
+                return failedResponse(res, 400, 'User connot be able to banned');
+            }
         }
         return successResponse(res, 200, 'User banned')
     } catch (error) {
@@ -212,15 +227,62 @@ const getbanuser = async (req, res) => {
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
 
-        const users = await TribeBannedUser.find({
-            tribe: req.tribe_id
+        const filter = {
+            tribe: req.tribe_id,
+            $or: [
+                { ban_duration: { $gt: new Date() } },   // Temporary ban still active
+                { ban_duration: null }                   // Permanent ban
+            ]
+        }
+
+        const [totalCount, users] = await Promise.all([
+            TribeBannedUser.countDocuments(filter),
+            TribeBannedUser.find(filter)
+                .skip((pageNumber - 1) * pageLimit)
+                .limit(pageLimit)
+                .sort({ created_at: -1 })
+                .populate('user', 'username profile_avtar')
+        ])
+
+        const bannedUser = {
+            data: users,
+            totalCount: totalCount
+        }
+
+        return successResponse(res, 200, bannedUser)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const searchbanusers = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const searchQuery = req.query.q || "";
+
+        const user = await User.findOne({
+            username: { $regex: searchQuery, $options: 'i' }
+        });
+
+        if (!user) {
+            return successResponse(res, 200, { data: [], totalCount: 0 });
+        }
+
+        const bannedUser = await TribeBannedUser.find({
+            tribe: req.tribe_id,
+            user: user._id
         })
             .skip((pageNumber - 1) * pageLimit)
             .limit(pageLimit)
             .sort({ created_at: -1 })
             .populate('user', 'username profile_avtar')
 
-        return successResponse(res, 200, users)
+
+        return successResponse(res, 200, bannedUser)
 
     } catch (error) {
         return failedResponse(res, 400, error);
@@ -433,7 +495,6 @@ const updatesavedresponse = async (req, res) => {
 
         successResponse(res, 200, 'Updated saved response.');
     } catch (error) {
-        console.error('Error updating saved response:', error);
         return failedResponse(res, 500, 'Internal server error.');
     }
 };
@@ -441,8 +502,8 @@ const updatesavedresponse = async (req, res) => {
 const deletesavedresponse = async (req, res) => {
     try {
         const { response_id } = req.query;
-        const res_delete=await TribeSavedResponse.findByIdAndDelete(response_id);
-        if(!res_delete){
+        const res_delete = await TribeSavedResponse.findByIdAndDelete(response_id);
+        if (!res_delete) {
             return failedResponse(res, 404, 'Saved response not deleted.');
         }
         successResponse(res, 200, 'Deleted saved response.');
@@ -451,4 +512,4 @@ const deletesavedresponse = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse }
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse }
