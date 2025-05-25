@@ -2,7 +2,7 @@ const validate = require('../middileware/validate');
 const router = require('express').Router();
 
 const { auth, mod } = require('../middileware/auth');
-const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse } = require('../controllers/modController');
+const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse ,searchbanusers} = require('../controllers/modController');
 const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation,  createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation } = require('../validation/moderation');
 
 router.post('/createtriberule', createRulesValidation, validate, auth, mod, createtriberules);
@@ -26,6 +26,8 @@ router.patch('/updateuserban', userBannedValidation, validate, auth, mod, update
 router.delete('/removeduserban',  auth, mod, removeduserban);
 
 router.get('/getbanuser', auth, mod, getbanuser);
+
+router.get('/searchbanusers', auth, mod, searchbanusers);
 
 router.post('/invitemember', inviteUserValidation, validate, auth, mod, invitemember);
 
