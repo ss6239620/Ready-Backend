@@ -65,6 +65,9 @@ const tribeBannedUserSchema = new mongoose.Schema({
     ban_duration: {
         type: Date,
     },
+    mute_duration: {
+        type: Date,
+    },
     ban_reason: {
         type: String,
     },
