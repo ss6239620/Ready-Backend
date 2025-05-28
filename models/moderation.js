@@ -112,6 +112,10 @@ const tribeMemberSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    is_invite_accepted: {
+        type: Boolean,
+        default: false
+    },
     is_approved_user: {
         type: Boolean,
         default: false
@@ -128,7 +132,10 @@ const tribeMemberSchema = new mongoose.Schema({
     invited_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
-        required: true
+    },
+    approved_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users',
     },
     invite_expired: {
         type: Date,

@@ -44,7 +44,6 @@ function successResponse(res, statusCode, data) {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function failedResponse(res, statusCode, err) {
-    console.log(err);
     res.status(statusCode).json({
         error: err
     });

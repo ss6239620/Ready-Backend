@@ -2,8 +2,8 @@ const validate = require('../middileware/validate');
 const router = require('express').Router();
 
 const { auth, mod } = require('../middileware/auth');
-const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers } = require('../controllers/modController');
-const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation } = require('../validation/moderation');
+const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers, getalltribemoderators, approveuser, getallapprovemembers, getalltribeinvite } = require('../controllers/modController');
+const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation } = require('../validation/moderation');
 
 router.post('/createtriberule', createRulesValidation, validate, auth, mod, createtriberules);
 
@@ -39,7 +39,13 @@ router.patch('/updateinvite', updateInviteValidation, validate, auth, mod, updat
 
 router.delete('/deleteinvite', auth, mod, deleteinvite);
 
-router.get('/getalltribemember', auth, mod, getalltribemember); gettribemodlogs
+router.get('/getalltribemoderators', auth, mod, getalltribemoderators);
+
+router.get('/getalltribeinvite', auth, mod, getalltribeinvite);
+
+router.post('/approveuser', approveUserValidation, validate, auth, mod, approveuser);
+
+router.get('/getallapprovemembers', auth, mod, getallapprovemembers);
 
 router.post('/createmodlog', createModLogValidation, validate, auth, mod, createmodlog);
 
