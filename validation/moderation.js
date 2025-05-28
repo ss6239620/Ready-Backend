@@ -43,6 +43,10 @@ const inviteUserValidation = [
     body('permissions').notEmpty().withMessage('Please provide valid permission.'),
 ]
 
+const approveUserValidation = [
+    body('user_id').notEmpty().withMessage('Please provide valid member id.'),
+]
+
 const updateInviteValidation = [
     body('member_id').notEmpty().withMessage('Please provide valid member id.'),
     body('permissions').notEmpty().withMessage('Please provide valid permission.'),
@@ -67,4 +71,4 @@ const updateSvaedResponseValidation = [
     body('response_id').notEmpty().withMessage('Please provide valid response id.'),
 ]
 
-module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation ,mutedUserValidation}
+module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation }

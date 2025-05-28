@@ -368,12 +368,29 @@ const getmuteduser = async (req, res) => {
 const invitemember = async (req, res) => {
     try {
         const { user_id, permissions } = req.body;
+
+        const isBannedOrMuted = await TribeBannedUser.findOne({
+            tribe: req.tribe_id,
+            user: user_id,
+            $or: [
+                { ban_duration: { $gt: new Date() } },   // Temporary ban still active
+                { mute_duration: { $gt: new Date() } },   // Temporary mute still active
+                { ban_duration: null },                   // Permanent ban
+            ]
+        })
+
+        if (isBannedOrMuted) {
+            return failedResponse(res, 400, `Invited user is ${isBannedOrMuted.restriction_type === "Banned" ? "banned" : "muted"} from the tribe.`);
+        }
+
         const memberExist = await TribeMember.findOne({
             member: user_id,
+            is_moderator:true,
             invite_expired: { $gt: new Date() }
         });
         if (memberExist) {
-            return failedResponse(res, 400, 'Invite Already sent');
+            await TribeMember.updateOne({ _id: memberExist._id }, { invite_expired: new Date() })
+            return successResponse(res, 200, 'Invite Already sent');
         }
         const user = await TribeMember.create({
             permissions: permissions,
@@ -385,7 +402,7 @@ const invitemember = async (req, res) => {
         if (!user) {
             return failedResponse(res, 400, 'Member cannot be invited');
         }
-        return successResponse(res, 200, 'Invite sent to user')
+        return successResponse(res, 200, 'Invite sent')
     } catch (error) {
         return failedResponse(res, 400, error);
     }
@@ -431,14 +448,93 @@ const deleteinvite = async (req, res) => {
     }
 }
 
-const getalltribemember = async (req, res) => {
+const getalltribemoderators = async (req, res) => {
     try {
         const { page = 1, limit = 5 } = req.query;
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
-
         const users = await TribeMember.find({
+            tribe: req.tribe_id, is_moderator: true, is_invite_accepted: true
+        })
+            .skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({ created_at: -1 })
+            .populate('member', 'username profile_avtar');
+
+        return successResponse(res, 200, users)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const approveuser = async (req, res) => {
+    try {
+        const { user_id } = req.body;
+
+        const isBannedOrMuted = await TribeBannedUser.findOne({
+            tribe: req.tribe_id,
+            user: user_id,
+            $or: [
+                { ban_duration: { $gt: new Date() } },   // Temporary ban still active
+                { mute_duration: { $gt: new Date() } },   // Temporary mute still active
+                { ban_duration: null },                   // Permanent ban
+            ]
+        })
+
+        if (isBannedOrMuted) {
+            return failedResponse(res, 400, `Invited user is ${isBannedOrMuted.restriction_type === "Banned" ? "banned" : "muted"} from the tribe.`);
+        }
+
+        const memberExist = await TribeMember.findOne({
+            member: user_id,
+            invite_expired: { $gt: new Date() }
+        });
+        if (memberExist) {
+            return successResponse(res, 200, 'Member is already approved user');
+        }
+        const user = await TribeMember.create({
+            approved_by: req.user,
+            member: user_id,
+            is_approved_user: true,
             tribe: req.tribe_id
+        })
+        if (!user) {
+            return failedResponse(res, 400, 'Member cannot be made as a approved user');
+        }
+        return successResponse(res, 200, 'Member has been approved');
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const getallapprovemembers = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+        const users = await TribeMember.find({
+            tribe: req.tribe_id, is_approved_user: true,
+        })
+            .skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({ created_at: -1 })
+            .populate('member', 'username profile_avtar');
+
+        return successResponse(res, 200, users)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const getalltribeinvite = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+        const users = await TribeMember.find({
+            tribe: req.tribe_id, is_moderator: true, invite_expired: { $gt: new Date() }
         })
             .skip((pageNumber - 1) * pageLimit)
             .limit(pageLimit)
@@ -588,4 +684,4 @@ const deletesavedresponse = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser }
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemoderators, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser, approveuser, getallapprovemembers, getalltribeinvite }
