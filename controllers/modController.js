@@ -140,6 +140,7 @@ const banuser = async (req, res) => {
         const alreadyBanned = await TribeBannedUser.findOne({
             tribe: req.tribe_id,
             user: ban_user_id,
+            restriction_type: RESTRICTION_TYPE.Banned,
             $or: [
                 { ban_duration: null },  // User is permanently banned
                 { ban_duration: { $gt: new Date() } } // Existing ban is longer
@@ -229,6 +230,7 @@ const getbanuser = async (req, res) => {
 
         const filter = {
             tribe: req.tribe_id,
+            restriction_type: RESTRICTION_TYPE.Banned,
             $or: [
                 { ban_duration: { $gt: new Date() } },   // Temporary ban still active
                 { ban_duration: null }                   // Permanent ban
@@ -258,11 +260,9 @@ const getbanuser = async (req, res) => {
 
 const searchbanusers = async (req, res) => {
     try {
-        const { page = 1, limit = 5 } = req.query;
-        const pageNumber = parseInt(page);
-        const pageLimit = parseInt(limit);
-
         const searchQuery = req.query.q || "";
+
+        const restrict_type = req.query.restriction_type === "Banned";
 
         const user = await User.findOne({
             username: { $regex: searchQuery, $options: 'i' }
@@ -271,16 +271,92 @@ const searchbanusers = async (req, res) => {
         if (!user) {
             return successResponse(res, 200, { data: [], totalCount: 0 });
         }
-
-        const bannedUser = await TribeBannedUser.find({
+        const bannedUser = await TribeBannedUser.findOne({
             tribe: req.tribe_id,
-            user: user._id
+            user: user._id,
+            restriction_type: restrict_type ? RESTRICTION_TYPE.Banned : RESTRICTION_TYPE.Muted,
+            $or: [
+                { ban_duration: { $gt: new Date() } },   // Temporary ban still active
+                { ban_duration: null },                   // Permanent ban
+            ]
         })
-            .skip((pageNumber - 1) * pageLimit)
-            .limit(pageLimit)
-            .sort({ created_at: -1 })
             .populate('user', 'username profile_avtar')
 
+
+        return successResponse(res, 200, bannedUser)
+
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
+const muteuser = async (req, res) => {
+    try {
+        const { mute_user_id, mod_note } = req.body;
+        const muted_duration = getBanEndDate(req.body.mute_duration);
+
+        const alreadyMuted = await TribeBannedUser.findOne({
+            tribe: req.tribe_id,
+            restriction_type: RESTRICTION_TYPE.Muted,
+            user: mute_user_id,
+            mute_duration: { $gt: new Date() }
+        })
+        if (alreadyMuted) {
+            const updateMutedUser = await TribeBannedUser.updateOne({ _id: alreadyMuted._id }, {
+                mute_duration: muted_duration,
+                mod_note: mod_note,
+                updated_at: new Date()
+            });
+            if (!updateMutedUser) {
+                return failedResponse(res, 400, 'User connot be able to muted');
+            }
+        } else {
+            const mute_user = await TribeBannedUser.create({
+                user: mute_user_id,
+                tribe: req.tribe_id,
+                mute_duration: muted_duration,
+                mod_note: mod_note,
+                banned_by: req.user,
+                restriction_type: RESTRICTION_TYPE.Muted,
+            })
+            if (!mute_user) {
+                return failedResponse(res, 400, 'User connot be able to muted');
+            }
+        }
+        return successResponse(res, 200, 'User Muted');
+    } catch (error) {
+        return failedResponse(res, 400, error)
+    }
+}
+
+const getmuteduser = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const filter = {
+            tribe: req.tribe_id,
+            restriction_type: RESTRICTION_TYPE.Muted,
+            $or: [
+                { ban_duration: { $gt: new Date() } },   // Temporary ban still active
+                { ban_duration: null }                   // Permanent ban
+            ]
+        }
+
+        const [totalCount, users] = await Promise.all([
+            TribeBannedUser.countDocuments(filter),
+            TribeBannedUser.find(filter)
+                .skip((pageNumber - 1) * pageLimit)
+                .limit(pageLimit)
+                .sort({ created_at: -1 })
+                .populate('user', 'username profile_avtar')
+        ])
+
+        const bannedUser = {
+            data: users,
+            totalCount: totalCount
+        }
 
         return successResponse(res, 200, bannedUser)
 
@@ -512,4 +588,4 @@ const deletesavedresponse = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse }
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemember, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser }

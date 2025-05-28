@@ -32,6 +32,12 @@ const userBannedValidation = [
     body('msg_to_user').notEmpty().withMessage('Please provide valid message to user.'),
 ];
 
+const mutedUserValidation = [
+    body('mute_duration').notEmpty().withMessage('Please provide valid banned duration.').isNumeric().withMessage('The duration must be number of days it will be -1 for permanent ban of the user.'),
+    body('mute_user_id').notEmpty().withMessage('Please provide valid user id.'),
+    body('mod_note').notEmpty().withMessage('Please provide valid mod_note.'),
+];
+
 const inviteUserValidation = [
     body('user_id').notEmpty().withMessage('Please provide valid member id.'),
     body('permissions').notEmpty().withMessage('Please provide valid permission.'),
@@ -61,4 +67,4 @@ const updateSvaedResponseValidation = [
     body('response_id').notEmpty().withMessage('Please provide valid response id.'),
 ]
 
-module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation }
+module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation ,mutedUserValidation}

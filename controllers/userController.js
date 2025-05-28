@@ -139,6 +139,23 @@ const userSerach = async (req, res) => {
     }
 }
 
+const getuserbyusername = async (req, res) => {
+    try {
+        const searchQuery = req.query.q || "";
+
+        if (!searchQuery) {
+            return failedResponse(res, 400, "Please provide valid search query");
+        }
+        const users = await User.findOne({
+            username: { $regex: searchQuery, $options: 'i' }
+        }).select("username profile_avtar")
+
+        return successResponse(res, 200, users)
+    } catch (error) {
+        return failedResponse(res, 400, error);
+    }
+}
+
 const getuserinfo = async (req, res) => {
     try {
         const user_id = req.params.id;
@@ -153,4 +170,4 @@ const getuserinfo = async (req, res) => {
 }
 
 
-module.exports = { login, logout, signup, oauthRegister, jointribe, userSerach, getuserinfo }
+module.exports = { login, logout, signup, oauthRegister, jointribe, userSerach, getuserinfo, getuserbyusername }

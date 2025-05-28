@@ -3,7 +3,7 @@ const validate = require('../middileware/validate');
 const router = require('express').Router();
 const { auth } = require('../middileware/auth');
 const { upload, multerErrorHandler } = require('../middileware/fileUpload');
-const { login, logout, signup, oauthRegister, jointribe, userSerach, getuserinfo, } = require('../controllers/userController');
+const { login, logout, signup, oauthRegister, jointribe, userSerach, getuserinfo, getuserbyusername, } = require('../controllers/userController');
 
 
 router.post('/signup', upload.fields([
@@ -19,6 +19,8 @@ router.get('/oauthRegister', oauthRegister);
 router.post('/jointribe', auth, jointribe)
 
 router.get('/usersearch', userSerach)
+
+router.get('/getuserbyusername', getuserbyusername)
 
 router.get('/getuserinfo/:id', getuserinfo)
 
