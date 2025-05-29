@@ -2,7 +2,7 @@ const validate = require('../middileware/validate');
 const router = require('express').Router();
 
 const { auth, mod } = require('../middileware/auth');
-const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers, getalltribemoderators, approveuser, getallapprovemembers, getalltribeinvite } = require('../controllers/modController');
+const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers, getalltribemoderators, approveuser, getallapprovemembers, getalltribeinvite, getallunmoderatedposts } = require('../controllers/modController');
 const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation } = require('../validation/moderation');
 
 router.post('/createtriberule', createRulesValidation, validate, auth, mod, createtriberules);
@@ -60,5 +60,7 @@ router.post('/createsavedresponse', createSvaedResponseValidation, validate, aut
 router.patch('/updatesavedresponse', updateSvaedResponseValidation, validate, auth, mod, updatesavedresponse);
 
 router.delete('/deletesavedresponse', auth, mod, deletesavedresponse);
+
+router.get('/getallunmoderatedposts', auth, mod, getallunmoderatedposts);
 
 module.exports = router
