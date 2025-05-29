@@ -53,6 +53,25 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users'
     }],
+    post_locked: {
+        type: Boolean,
+        default: false
+    },
+    is_post_spam: {
+        type: Boolean,
+        default: false
+    },
+    added_to_highlight: {
+        type: Boolean,
+        default: false
+    },
+    is_moderated: {
+        type: Boolean,
+        default: false
+    },
+    post_removed_reason: {
+        type: String
+    },
     created_by: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',

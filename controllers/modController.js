@@ -193,6 +193,7 @@ const updateuserban = async (req, res) => {
         }
 
         const ban_duration = getBanEndDate(req.body.ban_duration);
+
         const updateBan = await TribeBannedUser.updateOne(
             { _id: ban_id },
             {
@@ -385,7 +386,7 @@ const invitemember = async (req, res) => {
 
         const memberExist = await TribeMember.findOne({
             member: user_id,
-            is_moderator:true,
+            is_moderator: true,
             invite_expired: { $gt: new Date() }
         });
         if (memberExist) {
@@ -684,4 +685,25 @@ const deletesavedresponse = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemoderators, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser, approveuser, getallapprovemembers, getalltribeinvite }
+const getallunmoderatedposts = async (req, res) => {
+    try {
+        const { page = 1, limit = 5 } = req.query;
+        const pageNumber = parseInt(page);
+        const pageLimit = parseInt(limit);
+
+        const unModeratedposts = await Post.find({
+            is_moderated: false,
+            posted_tribe_id:req.tribe_id
+        }).skip((pageNumber - 1) * pageLimit)
+            .limit(pageLimit)
+            .sort({ created_at: -1 })
+            .select("content_title created_by total_vote total_comments content_path content_body content_link content_type posted_tribe_id status post_locked is_post_spam added_to_highlight created_at")
+            .populate('created_by', 'username profile_avtar')
+
+        return successResponse(res, 200, unModeratedposts);
+    } catch (error) {
+        return failedResponse(res, 500, 'Internal server error.');
+    }
+}
+
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemoderators, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser, approveuser, getallapprovemembers, getalltribeinvite, getallunmoderatedposts }
