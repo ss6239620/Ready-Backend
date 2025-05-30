@@ -43,7 +43,7 @@ const postSchema = new mongoose.Schema({
     status: {
         type: String,
         default: POST_STATUS.UNMODERATED,
-        enum: [POST_STATUS.REMOVED, POST_STATUS.APPROVE, POST_STATUS.EDITED, POST_STATUS.NEED_REVIEW, POST_STATUS.REPORTED, POST_STATUS.UNMODERATED]
+        enum: [POST_STATUS.REMOVED, POST_STATUS.APPROVED, POST_STATUS.EDITED, POST_STATUS.NEED_REVIEW, POST_STATUS.REPORTED, POST_STATUS.UNMODERATED,POST_STATUS.SPAMMED]
     },
     post_saved_by: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -57,15 +57,11 @@ const postSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    is_post_spam: {
-        type: Boolean,
-        default: false
-    },
     added_to_highlight: {
         type: Boolean,
         default: false
     },
-    is_moderated: {
+    is_nsfw: {
         type: Boolean,
         default: false
     },

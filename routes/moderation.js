@@ -2,8 +2,8 @@ const validate = require('../middileware/validate');
 const router = require('express').Router();
 
 const { auth, mod } = require('../middileware/auth');
-const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers, getalltribemoderators, approveuser, getallapprovemembers, getalltribeinvite, getallunmoderatedposts } = require('../controllers/modController');
-const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation } = require('../validation/moderation');
+const { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, getstatusbasedcontent, changecontentstatus, getbanuser, banuser, getmuteduser, muteuser, updateuserban, invitemember, updateinvite, deleteinvite, removeduserban, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, searchbanusers, getalltribemoderators, approveuser, getallapprovemembers, getalltribeinvite, getallmodqueueposts, updateunmoderatedpost } = require('../controllers/modController');
+const { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation, updateUnModeratorValidation } = require('../validation/moderation');
 
 router.post('/createtriberule', createRulesValidation, validate, auth, mod, createtriberules);
 
@@ -61,6 +61,8 @@ router.patch('/updatesavedresponse', updateSvaedResponseValidation, validate, au
 
 router.delete('/deletesavedresponse', auth, mod, deletesavedresponse);
 
-router.get('/getallunmoderatedposts', auth, mod, getallunmoderatedposts);
+router.get('/getallmodqueueposts', auth, mod, getallmodqueueposts);
+
+router.patch('/updateunmoderatedpost', updateUnModeratorValidation, validate, auth, mod, updateunmoderatedpost);
 
 module.exports = router
