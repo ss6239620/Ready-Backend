@@ -685,19 +685,21 @@ const deletesavedresponse = async (req, res) => {
     }
 }
 
-const getallunmoderatedposts = async (req, res) => {
+const getallmodqueueposts = async (req, res) => {
     try {
         const { page = 1, limit = 5 } = req.query;
         const pageNumber = parseInt(page);
         const pageLimit = parseInt(limit);
 
+        const post_status = req.query.status;
+
         const unModeratedposts = await Post.find({
-            is_moderated: false,
-            posted_tribe_id:req.tribe_id
+            status: post_status,
+            posted_tribe_id: req.tribe_id
         }).skip((pageNumber - 1) * pageLimit)
             .limit(pageLimit)
             .sort({ created_at: -1 })
-            .select("content_title created_by total_vote total_comments content_path content_body content_link content_type posted_tribe_id status post_locked is_post_spam added_to_highlight created_at")
+            .select("content_title created_by total_vote total_comments content_path content_body content_link content_type posted_tribe_id status post_locked is_post_spam added_to_highlight created_at is_nsfw")
             .populate('created_by', 'username profile_avtar')
 
         return successResponse(res, 200, unModeratedposts);
@@ -706,4 +708,46 @@ const getallunmoderatedposts = async (req, res) => {
     }
 }
 
-module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemoderators, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser, approveuser, getallapprovemembers, getalltribeinvite, getallunmoderatedposts }
+const updateunmoderatedpost = async (req, res) => {
+    try {
+        const { post_action, post_id } = req.body;
+
+        const post = await Post.findById(post_id);
+
+        if (post_action === 'LOCK') {
+            const updatedPost = await Post.updateOne({ _id: post_id },
+                { post_locked: !post.post_locked },
+                { new: true, runValidators: true }
+            );
+            if (!updatedPost) {
+                return failedResponse(res, 400, `Cannot able to ${post_action} post.`);
+            }
+            return successResponse(res, 200, `Updated post status`);
+        }
+        else if (post_action === 'ADD_TO_HIGHLIGHT') {
+            const updatedPost = await Post.updateOne({ _id: post_id },
+                { added_to_highlight: !post.added_to_highlight },
+                { new: true, runValidators: true }
+            );
+            if (!updatedPost) {
+                return failedResponse(res, 400, `Cannot able to ${post_action} post.`);
+            }
+            return successResponse(res, 200, `Updated post status`);
+        }
+        else if (post_action === POST_STATUS.APPROVED || post_action === POST_STATUS.REMOVED || post_action === POST_STATUS.SPAMMED) {
+            const updatedPost = await Post.updateOne({ _id: post_id },
+                { status: post_action, },
+                { new: true, runValidators: true }
+            )
+            if (!updatedPost) {
+                return failedResponse(res, 400, `Cannot able to ${post_action} post.`);
+            }
+            return successResponse(res, 200, `Updated post status`);
+        }
+        return failedResponse(res, 400, `Please send appropriate post action.`);
+    } catch (error) {
+        return failedResponse(res, 500, 'Internal server error.');
+    }
+}
+
+module.exports = { createtriberules, updatetriberules, deletetriberule, getalltriberules, getqueuecontent, changecontentstatus, getstatusbasedcontent, banuser, getbanuser, searchbanusers, updateuserban, removeduserban, invitemember, updateinvite, deleteinvite, getalltribemoderators, createmodlog, gettribemodlogs, updatetribesettings, updatetribesafetyfilters, createsavedresponse, updatesavedresponse, deletesavedresponse, muteuser, getmuteduser, approveuser, getallapprovemembers, getalltribeinvite, getallmodqueueposts, updateunmoderatedpost }

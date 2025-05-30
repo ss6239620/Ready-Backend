@@ -71,4 +71,9 @@ const updateSvaedResponseValidation = [
     body('response_id').notEmpty().withMessage('Please provide valid response id.'),
 ]
 
-module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation }
+const updateUnModeratorValidation = [
+    body('post_action').notEmpty().withMessage('Please provide valid response name.'),
+    body('post_id').notEmpty().withMessage('Please provide valid response name.'),
+]
+
+module.exports = { createRulesValidation, updateRulesValidation, changeStatusValidation, bannedUserValidation, userBannedValidation, inviteUserValidation, updateInviteValidation, createModLogValidation, createSvaedResponseValidation, updateSvaedResponseValidation, mutedUserValidation, approveUserValidation, updateUnModeratorValidation }
